@@ -6,7 +6,7 @@ export function Appbar() {
     const session = useSession()
     return (
         <div className="border-b px-2 py-2 flex justify-between">
-            <div>
+            <div className="text-xl font-bold">
                 DCEX
             </div>
 
