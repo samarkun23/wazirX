@@ -1,5 +1,7 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google";
+import db  from '@/app/db'
+import { Keypair } from '@solana/web3.js';
 
 // we add onlg google provider .
 const handler = NextAuth({
@@ -11,6 +13,45 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
+      if(account?.provider === "google"){
+        const email = user.email;
+        if (!email) {
+          return false 
+        }
+        
+        const userDb = await db.user.findFirst({
+          where:{
+            username: email
+          }
+        })
+
+        if (userDb) {
+          return true 
+        }
+
+        const keypair = Keypair.generate();
+        const publicKey = keypair.publicKey.toBase58();
+        const privateKey = keypair.secretKey.toString();
+
+        await db.user.create({
+          data: {
+            username: email,
+            provider: "Google",
+            solWallet: {
+              create: {
+                publicKey: publicKey,
+                privateKey: privateKey
+              }
+            },
+            InrWallet: {
+              create:{
+                balance: 0
+              }
+            }
+          }
+        })
+
+      }
       return true
     }
   }
