@@ -1,9 +1,16 @@
+-- CreateEnum
+CREATE TYPE "Provider" AS ENUM ('Google');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "sub" TEXT NOT NULL DEFAULT '',
+    "name" TEXT,
+    "profileImage" TEXT,
+    "password" TEXT,
     "solWalletId" TEXT,
+    "provider" "Provider" NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
