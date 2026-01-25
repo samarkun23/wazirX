@@ -9,7 +9,7 @@ export interface session extends Session {
         email: string,
         name: string,
         image: string,
-        uid: string // add the uid field to the user 
+        uid: string, // add the uid field to the user
     }
 }
 
@@ -23,79 +23,148 @@ export const authConfig = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID ?? "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? ""
-        })
+        }),
     ],
-    // callbacks: {
+    callbacks: {
+        async session ({session, token}: any): Promise<session> {
+            const newSession : session = session as session;
+            if (newSession.user && token?.uid) {
+                newSession.user.uid = token.uid ?? "";
+            }
+            return newSession;
+        },
+        async jwt({ token , account , profile } : any) {
+            if(account){
+                const user = await db.user.findFirst({
+                    where: {
+                        sub: account.providerAccountId ?? ""
+                    }
+                })
+                if(user){
+                    token.uid = user.id
+                }
+            }
+            return token
+        },
+        async signIn({ user, account, profile, email, credentials }: any) {
+            if(account?.provider === 'google'){
+                const email = user.email;
+                if (!email) {
+                    return false 
+                }
+                
+                const userDb = await db.user.findFirst({
+                    where:{
+                        username : email
+                    }
+                })
+                
+                if (userDb) {
+                    return true 
+                }
+                
+                const keypair = Keypair.generate();
+                const publicKey = keypair.publicKey.toBase58();
+                const privateKey = keypair.secretKey;
+                
+                await db.user.create({
+                    data:{
+                        username: email,
+                        name: profile?.name,
+                        profileImage: profile?.picture,
+                        provider: 'Google',
+                        sub: account.providerAccountId,
+                        solWallet: {
+                            create:{
+                                publicKey: publicKey,
+                                privateKey: privateKey.toString()
+                            }
+                        },
+                        InrWallet: {
+                            create: {
+                                balance: 0
+                            }
+                        }
+                    }
+                })
+                
+                return true
+                
+            }
+            return false
+        },
 
-    //     session: ({ session, token }: any): session => {
-    //         const newSession: session = session as session;
-    //         if (newSession.user && token.uid) {
-    //             newSession.user.uid = token.uid ?? "";  //
-    //         }
-    //         return newSession;
-    //     },
+        //     session: ({ session, token }: any): session => {
+        //         const newSession: session = session as session;
+        //         if (newSession.user && token.uid) {
+        //             newSession.user.uid = token.uid ?? "";  //
+        //         }
+        //         return newSession;
+        //     },
 
-    //     async jwt({ token, account, profile }: any) {
-    //         if (account) {
+        //     async jwt({ token, account, profile }: any) {
+        //         if (account) {
 
-    //             const user = await db.user.findFirst({
-    //                 where: {
-    //                     sub: account?.providerAccountId ?? ""
-    //                 }
-    //             })
-    //             if (user) {
-    //                 token.uid = user.id // when id gonna create we fetch the sub our userId and put that uid in the token 
-    //             }
-    //         }
-    //         return token
-    //     },
+        //             const user = await db.user.findFirst({
+        //                 where: {
+        //                     sub: account?.providerAccountId ?? ""
+        //                 }
+        //             })
+        //             if (user) {
+        //                 token.uid = user.id // when id gonna create we fetch the sub our userId and put that uid in the token 
+        //             }
+        //         }
+        //         return token
+        //     },
 
-    //     async signIn({ user, account, profile, email, credentials }: any) {
-    //         if (account?.provider === "google") {
-    //             const email = user.email;
-    //             if (!email) {
-    //                 return false
-    //             }
+        //     async signIn({ user, account, profile, email, credentials }: any) {
+        //         if (account?.provider === "google") {
+        //             const email = user.email;
+        //             if (!email) {
+        //                 return false
+        //             }
 
-    //             const userDb = await db.user.findFirst({
-    //                 where: {
-    //                     username: email
-    //                 }
-    //             })
+        //             const userDb = await db.user.findFirst({
+        //                 where: {
+        //                     username: email
+        //                 }
+        //             })
 
-    //             if (userDb) {
-    //                 return true
-    //             }
+        //             if (userDb) {
+        //                 return true
+        //             }
 
-    //             const keypair = Keypair.generate();
-    //             const publicKey = keypair.publicKey.toBase58();
-    //             const privateKey = keypair.secretKey.toString();
+        //             const keypair = Keypair.generate();
+        //             const publicKey = keypair.publicKey.toBase58();
+        //             const privateKey = keypair.secretKey.toString();
 
-    //             await db.user.create({
-    //                 data: {
-    //                     username: email,
-    //                     name: profile?.name,
-    //                     //@ts-ignore
-    //                     profileImage: profile?.picture,
-    //                     provider: "Google",
-    //                     sub: account.providerAccountId, // google provide this id we store this id in db as well 
-    //                     solWallet: {
-    //                         create: {
-    //                             publicKey: publicKey,
-    //                             privateKey: privateKey
-    //                         }
-    //                     },
-    //                     InrWallet: {
-    //                         create: {
-    //                             balance: 0
-    //                         }
-    //                     }
-    //                 }
-    //             })
+        //             await db.user.create({
+        //                 data: {
+        //                     username: email,
+        //                     name: profile?.name,
+        //                     //@ts-ignore
+        //                     profileImage: profile?.picture,
+        //                     provider: "Google",
+        //                     sub: account.providerAccountId, // google provide this id we store this id in db as well 
+        //                     solWallet: {
+        //                         create: {
+        //                             publicKey: publicKey,
+        //                             privateKey: privateKey
+        //                         }
+        //                     },
+        //                     InrWallet: {
+        //                         create: {
+        //                             balance: 0
+        //                         }
+        //                     }
+        //                 }
+        //             })
 
-    //         }
-    //         return true
-    //     }
-    // }
+        //         }
+        //         return true
+        //     }
+        // }
 
+
+    }
 }
