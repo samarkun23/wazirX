@@ -17,7 +17,7 @@ async function getUserWallet() {
 
     if (!userWallet) {
         return{
-            error: "No solana wallet"
+            error: "No solana wallet found to the user "
         } 
     }
 
@@ -32,9 +32,9 @@ export default async function Dashboard() {
     if (userWallet.error || !userWallet.userWallet?.publicKey) {
         return <>No Solana wallet found</> 
     }
+    
     return (
-        <DashboardUi publicKey={userWallet.userWallet?.publicKey}/>
-
+        <DashboardUi publicKey={userWallet.userWallet?.publicKey || "kjdfajklasjfdl"}/>
     )
     
 }
