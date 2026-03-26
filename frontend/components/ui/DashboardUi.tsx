@@ -1,72 +1,160 @@
 "use client"
+import { useTokens } from "@/app/api/hooks/useTokens";
 import { PrimaryButton } from "@/app/components/Button";
-import { ChartBarIcon, CogIcon, HomeIcon } from "lucide-react"
+import { TokenList } from "@/app/components/TokenList";
+import { Wallet } from "lucide-react"
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+import { ReactHTMLElement, useEffect, useState } from "react";
 
 
-function Greeting({
-    image, name, publicKey
-}: {
-    image: string, name: string, publicKey: string
-}) {
+function TokenRowsInner({ token }: { token: any }) {
+    return <div className="bg-gradient-to-br from-gray-500/90 to-black/80 rounded-2xl m-2">
+        <div className="flex text-white rounded-2xl ">
+            <div className="flex w-full p-2">
+                <div>
+                    <img src={token.image} className="w-10 h-10 rounded-full" />
+                </div>
+                <div className="flex items-center gap-10 w-full justify-between">
+                    <div className="flex pl-2">
+                        {token.name}
+                    </div>
+                    <div className="flex">
+                        ~ ${token.price}
+                    </div>
+                </div>
+            </div>
 
-    return <div className="mt-10">
-        <div className=" items-center gap-4 flex justify-evenly">
-            <span className="text-gray-200">Welcome {name} </span>
-            <img src={image} alt="" className="w-10 h-10 rounded-full" />
         </div>
-        <div className="text-gray-400 mt-5">{publicKey}</div>
+
     </div>
 }
 
-function Assest({ publicKey }: { publicKey: string }) {
+function DashboardCard({
+    image,
+    name,
+    publicKey,
+    totalBalance,
+    tokens
+}: {
+    image: string
+    name: string
+    publicKey: string
+    totalBalance?: number
+    tokens?: any[]
+}) {
+
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-
-        if(copied){
-            let timeout = setTimeout(() => {
-                setCopied(false)
-            }, 3000)
-            return () => {
-                clearTimeout(timeout)
-            }
+        if (copied) {
+            const timeout = setTimeout(() => setCopied(false), 3000);
+            return () => clearTimeout(timeout);
         }
-    },[copied])
+    }, [copied]);
 
-    return <div className="text-slate-500 mt-4">
-        Account assest
-        <br />
+    return (
+        <div className="mt-10 flex justify-center">
+            <div className="w-full min-w-xl max-w-2xl rounded-2xl bg-gradient-to-br from-gray-500/90 to-black/80 p-10 shadow-xl border border-white/30">
 
-        <div className="flex justify-between">
-            <div>
-                
-            </div>
+                {/* Header */}
+                <div className="flex items-center gap-4">
+                    <img
+                        src={image}
+                        alt={name}
+                        className="w-12 h-12 rounded-full ring-2 ring-white/60"
+                    />
+                    <div>
+                        <p className="text-sm text-white">Welcome back</p>
+                        <h2 className="text-lg font-semibold text-white">{name}</h2>
+                    </div>
+                </div>
 
-            <div>
-                <PrimaryButton onClick={() => {
-                    navigator.clipboard.writeText(publicKey)
-                    setCopied(true)
-                }}>{copied ? "Copied" : "Copy address" }</PrimaryButton>
+                {/* Divider */}
+                <div className="my-5 h-px bg-gray-700" />
+
+                {/* Wallet + Balance */}
+                <div className="flex justify-between items-center">
+
+                    <div>
+                        <p className="text-sm text-gray-200 font-semibold">Total Balance</p>
+                        <div className="flex align-middle items-center gap-1">
+                            <h3 className="text-4xl font-bold text-white">
+                                ${totalBalance?.toFixed(2) ?? "—"}
+                            </h3>
+                            <div className="font-bold text-2xl text-gray-300">
+                                USD
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div
+                        className="drop-shadow-[0_0_10px_rgba(222,219,220,0.4)]  cursor-pointer rounded-lg bg-gray-500/60 p-2 text-sm text-gray-100 font-mono flex gap-2 items-center"
+                        onClick={() => {
+                            navigator.clipboard.writeText(publicKey);
+                            setCopied(true);
+                        }}
+                    >
+                        <Wallet />
+                        {copied ? "Copied" : "Copy Address"}
+                    </div>
+                </div>
+
+                {/* Tokens */}
+                <div className="mt-5">
+                    <p className="text-xs text-gray-400 mb-2"> Your Assets</p>
+
+                    {/* {tokens?.map((t:unknown) => <TokenRowsInner key={Math.random()} token={t} />)} */}
+                    <TokenList tokens={tokens}/>
+                    {/* <div className="space-y-2 max-h-40 overflow-auto">
+                        {tokens?.length ? (
+                            tokens.map((token, index) => (
+                                <div
+                                    key={index}
+                                    className="flex justify-between bg-gray-800/60 p-2 rounded-lg"
+                                >
+                                    <span>{token.symbol}</span>
+                                    <span>{token.balance}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-400 text-sm">
+                                No assets found
+                            </p>
+                        )} */}
+                    {/* </div> */}
+                </div>
+
             </div>
         </div>
-    </div>
+    );
 }
-
 
 export default function DashboardUi({ publicKey }: {
     publicKey: string
 }) {
     const session = useSession();
+    const { tokenBalances, loading } = useTokens(publicKey);
+
+
+    if (loading) return <div>
+        loading....
+    </div>
     return (
 
-        <div className="flex bg-black h-screen text-white justify-center">
+        <div className="flex bg-black h-screen text-white justify-center pt-20">
 
             <div>
-                <Greeting name={session.data?.user?.name ?? ""} image={session.data?.user?.image ?? "wazirx_pfp.webp"} publicKey={publicKey} />
-                <Assest publicKey={publicKey} />
+                {/* <Greeting name={session.data?.user?.name ?? ""} image={"wazirx_pfp.webp"} publicKey={publicKey || "jakjdf"}/> */}
+                {/* <Assest publicKey={publicKey} /> */}
+                <DashboardCard
+                    image="wazirx_pfp.webp"
+                    name={session.data?.user?.name ?? ""}
+                    publicKey={publicKey}
+                    totalBalance={tokenBalances?.totalBalance}
+                    tokens={tokenBalances?.tokens}
+                />
+                {/* <TokenList tokens={tokenBalances?.tokens} key={Math.random()}/> */}
             </div>
 
         </div>
