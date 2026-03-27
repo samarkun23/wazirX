@@ -25,7 +25,7 @@ function TokenRows({ token }: { token: any }) {
             </div>
 
         </div>
-        <div>
+        <div className="mr-2">
             <div className="font-bold">
                 {token.usdBalance}
             </div>
