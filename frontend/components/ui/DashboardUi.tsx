@@ -5,6 +5,7 @@ import { TokenList } from "@/app/components/TokenList";
 import { Wallet } from "lucide-react"
 import { useSession } from "next-auth/react";
 import { ReactHTMLElement, useEffect, useState } from "react";
+import { TabButton } from "./TabButton";
 
 
 function TokenRowsInner({ token }: { token: any }) {
@@ -29,6 +30,9 @@ function TokenRowsInner({ token }: { token: any }) {
     </div>
 }
 
+type Tab = "tokens" | "send" | "add_funds" | "swap" | "withdraw"
+const tabs: Tab[] = ["tokens", "send", "add_funds", "swap", "withdraw"];
+
 function DashboardCard({
     image,
     name,
@@ -44,6 +48,7 @@ function DashboardCard({
 }) {
 
     const [copied, setCopied] = useState(false);
+    const [selectedTab, setSelectedTab] = useState<Tab>("tokens");
 
     useEffect(() => {
         if (copied) {
@@ -99,31 +104,21 @@ function DashboardCard({
                         {copied ? "Copied" : "Copy Address"}
                     </div>
                 </div>
+                {tabs.map(tab => <TabButton key={Math.random()} active={tab === selectedTab} onClick={() => { setSelectedTab(tab) }}>
+                    {tab}
+                </TabButton>)}
 
                 {/* Tokens */}
-                <div className="mt-5">
-                    <p className="text-xs text-gray-400 mb-2"> Your Assets</p>
+                {selectedTab === 'tokens' ?
+                    <div className="mt-5">
+                        <p className="text-xs text-gray-400 mb-2"> Your Assets</p>
 
-                    {/* {tokens?.map((t:unknown) => <TokenRowsInner key={Math.random()} token={t} />)} */}
-                    <TokenList tokens={tokens}/>
-                    {/* <div className="space-y-2 max-h-40 overflow-auto">
-                        {tokens?.length ? (
-                            tokens.map((token, index) => (
-                                <div
-                                    key={index}
-                                    className="flex justify-between bg-gray-800/60 p-2 rounded-lg"
-                                >
-                                    <span>{token.symbol}</span>
-                                    <span>{token.balance}</span>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-gray-400 text-sm">
-                                No assets found
-                            </p>
-                        )} */}
-                    {/* </div> */}
-                </div>
+                        {/* {tokens?.map((t:unknown) => <TokenRowsInner key={Math.random()} token={t} />)} */}
+                        <TokenList tokens={tokens} />
+                    </div>
+                    :
+                    null
+                }
 
             </div>
         </div>
@@ -135,7 +130,7 @@ export default function DashboardUi({ publicKey }: {
 }) {
     const session = useSession();
     const { tokenBalances, loading } = useTokens(publicKey);
-
+    console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
     if (loading) return <div>
         loading....

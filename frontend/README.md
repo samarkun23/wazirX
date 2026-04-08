@@ -1,3 +1,12 @@
+# what is valid 
+- Send and Add funds are not valid in India even though withdraw is also invalid but it is not shown in the UI because of the design of the UI. So we have to remove send and add funds from the UI and also remove the functionality of send and add funds from the backend.
+- Swap functionality is valid in India.
+
+# What happened when you click on swap 
+- So When you click on swap it will show you the swap ui where you can select the token you want to swap and the token you want to receive and then you can enter the amount you want to swap and then you can click on the swap button and it will show you the swap details and then you can confirm the swap and then it will show you the swap success message. 
+- We are power our liquidity from the jupiter or if you want to use any other decentralized exchange then you can also use that but here we are using jupiter as our liquidity provider.
+- High level we don't have a market maker so we are using the liquidity from the jupiter or dcex and we are not providing any liquidity to the jupiter but we are just using the liquidity from the jupiter and we are not taking any fee from the swap and we are not providing any incentive to the users for swapping but we are just providing a platform for swapping and we are not providing any liquidity to the jupiter but we are just using the liquidity from the jupiter and we are not taking any fee from the swap and we are not providing any incentive to the users for swapping but we are just providing a platform for swapping.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
