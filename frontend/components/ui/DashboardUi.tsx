@@ -1,11 +1,12 @@
 "use client"
-import { useTokens } from "@/app/api/hooks/useTokens";
+import { TokenWithbalance, useTokens } from "@/app/api/hooks/useTokens";
 import { PrimaryButton } from "@/app/components/Button";
 import { TokenList } from "@/app/components/TokenList";
 import { Wallet } from "lucide-react"
 import { useSession } from "next-auth/react";
 import { ReactHTMLElement, useEffect, useState } from "react";
 import { TabButton } from "./TabButton";
+import { Swap } from "./Swap";
 
 
 function TokenRowsInner({ token }: { token: any }) {
@@ -31,20 +32,31 @@ function TokenRowsInner({ token }: { token: any }) {
 }
 
 type Tab = "tokens" | "send" | "add_funds" | "swap" | "withdraw"
-const tabs: Tab[] = ["tokens", "send", "add_funds", "swap", "withdraw"];
+const tabs: {id: Tab, name: string}[] = [
+    {id: "tokens", name:"Tokens"},
+    {id: "send", name:"Send"},
+    {id: "add_funds", name: "Add funds"},
+    {id: "withdraw", name: "Withdraw"},
+    {id: "swap", name: "Swap"},
+];
 
 function DashboardCard({
     image,
     name,
     publicKey,
     totalBalance,
-    tokens
+    tokens,
+    tokenBalances
 }: {
     image: string
     name: string
     publicKey: string
     totalBalance?: number
     tokens?: any[]
+    tokenBalances: {
+        totalBalance: number,
+        tokens : TokenWithbalance[]
+    } | null;
 }) {
 
     const [copied, setCopied] = useState(false);
@@ -59,7 +71,7 @@ function DashboardCard({
 
     return (
         <div className="mt-10 flex justify-center">
-            <div className="w-full min-w-xl max-w-2xl rounded-2xl bg-gradient-to-br from-gray-500/90 to-black/80 p-10 shadow-xl border border-white/30">
+            <div className="w-full max-w-3xl min-w-3xl rounded-2xl bg-gradient-to-br from-gray-500/90 to-black/80 p-10 shadow-xl border border-white/30">
 
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -104,9 +116,12 @@ function DashboardCard({
                         {copied ? "Copied" : "Copy Address"}
                     </div>
                 </div>
-                {tabs.map(tab => <TabButton key={Math.random()} active={tab === selectedTab} onClick={() => { setSelectedTab(tab) }}>
-                    {tab}
-                </TabButton>)}
+
+                <div className="flex">
+                    {tabs.map(tab => <TabButton key={Math.random()} active={tab.id === selectedTab} onClick={() => { setSelectedTab(tab.id) }}>
+                        {tab.name}
+                    </TabButton>)}
+                </div>
 
                 {/* Tokens */}
                 {selectedTab === 'tokens' ?
@@ -115,6 +130,18 @@ function DashboardCard({
 
                         {/* {tokens?.map((t:unknown) => <TokenRowsInner key={Math.random()} token={t} />)} */}
                         <TokenList tokens={tokens} />
+                    </div>
+                    :
+                    null
+                }
+
+                {/* SWAP  */}
+                {
+                    selectedTab === 'swap' ? 
+                    <div>
+                        <Swap publicKey={publicKey}
+                            tokenBalance={tokenBalances}
+                        />
                     </div>
                     :
                     null
@@ -148,6 +175,7 @@ export default function DashboardUi({ publicKey }: {
                     publicKey={publicKey}
                     totalBalance={tokenBalances?.totalBalance}
                     tokens={tokenBalances?.tokens}
+                    tokenBalances={tokenBalances}
                 />
                 {/* <TokenList tokens={tokenBalances?.tokens} key={Math.random()}/> */}
             </div>
